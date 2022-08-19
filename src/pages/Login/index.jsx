@@ -51,26 +51,35 @@ export default function Login() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box component="main">
-        {/* Login BG */}
-        <Grid
-          container
-          component="main"
-          sx={{ py: 15, height: "100%", boxShadow: "none" }}
+      <Box
+        component="main"
+        sx={{
+          display: "flex",
+        }}
+      >
+        <Box
+          sx={{
+            display: { xs: "none", md: "flex" },
+            width: "50%",
+            height: "100vh",
+            justifyContent: "center",
+            alignItems: "center",
+            background: "#E5E5E5",
+          }}
         >
-          <CssBaseline />
-          <Grid
-            item
-            xs={false}
-            sm={4}
-            md={7}
-            sx={{
-              backgroundImage: `url(${bgLogin})`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
-            }}
-          />
-          <Grid item xs={12} sm={8} md={5} square>
+          <img src={bgLogin} alt="Imagem Login" width="80%" />
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            width: { xs: "100%", md: "50%" },
+            height: "100vh",
+            justifyContent: "center",
+            alignItems: "center",
+            background: "#f5f5f5",
+          }}
+        >
+          <Grid item xs={12} sm={8} md={8} square>
             <Box
               sx={{
                 my: 8,
@@ -82,12 +91,8 @@ export default function Login() {
               <Typography component="h1" variant="h5">
                 Login
               </Typography>
-              <Box
-                component="form"
-                validate
-                onSubmit={handleSubmit}
-                sx={{ mt: 1 }}
-              >
+
+              <Box component="form" validate onSubmit={handleSubmit}>
                 {error === "Insira um e-mail válido" ? (
                   <TextField
                     error
@@ -219,7 +224,7 @@ export default function Login() {
               </Box>
             </Box>
           </Grid>
-        </Grid>
+        </Box>
       </Box>
     </ThemeProvider>
   );

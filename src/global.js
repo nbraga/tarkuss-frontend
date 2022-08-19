@@ -6,6 +6,7 @@ export default createGlobalStyle`
     padding: 0;
     outline:0;
     box-sizing: border-box;
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
 }
 
 html, body, #root{
@@ -21,7 +22,7 @@ body{
 body, input, button{
     color: #182436;
     font-size: 14px;
-    font-family: Roboto, Arial, Helvetica, sans-serif;
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
 }
 
 button{
@@ -121,6 +122,7 @@ ul, li{
     font-weight: bold;
     background-color:  gray;
     padding: 10px;
+    
   } */
 
 
