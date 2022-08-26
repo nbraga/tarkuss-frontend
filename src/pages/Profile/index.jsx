@@ -7,6 +7,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import axios from 'axios';
 
 import { Button, Stack } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -33,38 +34,42 @@ const theme = createTheme();
 
 export default function SignIn() {
   const dispatch = useDispatch();
-
   const user = useSelector((state) => state.user.user);
 
-  // Load user data
-  useEffect(() => {
-    dispatch(profile());
-  }, [dispatch]);
-
-  // fill user form
-  useEffect(() => {
-    if (user) {
-      setName(user.name);
-      setEmail(user.email);
-    }
-  }, [user]);
-
-  console.log(user);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [profileImage, setProfileImage] = useState("");
   const [previewImage, setPreviewImage] = useState("");
+  const [profileImage, setProfileImage] = useState("");
   const [cpf, setCpf] = useState("");
 
-  const [activeEmail, setActiveEmail] = useState(true);
 
+
+const [endereco,setEndereco] = useState({
+  cep:"",
+  rua:"",
+  complemento:"",
+  numero:"",
+  cidade:"",
+  bairro:"",
+  uf:""
+})
+   const [cep, setCep] = useState('');
+   const [erro, setErro] = useState("")
+
+  /* const [rua, setRua] = useState('')
+  const [complemento, setComplemento] = useState('')
+  const [numero, setNumero] = useState('')
+  const [cidade, setCidade] = useState('')
+  const [bairro, setBairro] = useState('')
+  const [uf, setUf] = useState(""); */
+
+
+  
   const [gender, setGender] = useState("");
   const [civil, setCivil] = useState("");
-  const [uf, setUf] = useState("");
+  const [activeEmail, setActiveEmail] = useState(true);
+  
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-  };
 
   const handleActive = () => {
     if (activeEmail === true) {
@@ -73,6 +78,19 @@ export default function SignIn() {
       setActiveEmail(true);
     }
   };
+
+    // Load user data
+    useEffect(() => {
+      dispatch(profile());
+    }, [dispatch]);
+  
+    // fill user form
+    useEffect(() => {
+      if (user) {
+        setName(user.name);
+        setEmail(user.email);
+      }
+    }, [user]);
 
   const handleFile = (e) => {
     // image preview
@@ -84,6 +102,78 @@ export default function SignIn() {
     setProfileImage(image);
   };
 
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const formData = FormData()
+
+    formData.append("nome", name);
+    formData.append("email", email);
+    formData.append("cpf", cpf);
+    formData.append("gender", gender);
+    formData.append("civil", civil);
+    formData.append("cep", cep);
+    formData.append("rua", endereco.cep);
+    formData.append("complemento", endereco.complemento);
+    formData.append("numero", endereco.numero);
+    formData.append("cidade", endereco.cidade);
+    formData.append("bairro", endereco.bairro);
+    formData.append("uf", endereco.uf);
+
+    if (previewImage) {
+      formData.append("imagem", previewImage);
+    }
+
+    /* api
+      .request({
+        url: "pratos/",
+        method: "POST",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        data: formData,
+      })
+      .then(() => {
+        setNome("")
+        setDescricao("")
+        setRestaurante("")
+        setTag("")
+        alert("Prato cadastrado com sucesso!")
+      })
+      .catch((error) => console.log(error)); */
+    
+  };
+  
+    useEffect(() => {
+      if(cep.length === 8){
+      axios.get(`https://viacep.com.br/ws/${cep}/json/`)
+      .then(function (response) {
+        if (response.data.erro){
+          setEndereco({
+            rua:"",
+            complemento:"",
+            numero:"",
+            cidade:"",
+            bairro:"",
+            uf:""
+          })
+          return setErro("Cep inválido, digite as informações manualmente!");
+        }
+        setErro("")
+        setEndereco({
+          rua:response.data.logradouro,
+          complemento:response.data.complemento,
+          bairro:response.data.bairro,
+          uf:response.data.uf,
+          cidade:response.data.localidade
+        })
+      })
+      .catch(function (error) {
+        console.error(error);
+      })
+    }
+    }, [cep]);
+ 
   return (
     <ThemeProvider theme={theme}>
       <Typography
@@ -116,7 +206,7 @@ export default function SignIn() {
               maxWidth: "100em",
             }}
           >
-            <div id="edit-profile">
+            <div>
               <Stack spacing={2}>
                 {user.profileImage || previewImage ? (
                   <img
@@ -241,9 +331,9 @@ export default function SignIn() {
                   <MenuItem value="">
                     <em>Nenhum</em>
                   </MenuItem>
-                  <MenuItem value={10}>Solteiro(a)</MenuItem>
-                  <MenuItem value={20}>Casado(a)</MenuItem>
-                  <MenuItem value={30}>Divorciodado(a)</MenuItem>
+                  <MenuItem value="solteiro(a)">Solteiro(a)</MenuItem>
+                  <MenuItem value="casado(a)">Casado(a)</MenuItem>
+               
                 </Select>
               </FormControl>
             </Stack>
@@ -286,17 +376,23 @@ export default function SignIn() {
                 variant="standard"
                 margin="normal"
                 required
+                type="number"
                 id="cep"
                 label="CEP"
                 name="cep"
+                value={cep}
+                onChange={(e) => setCep(e.target.value)}
+
               />
               <TextField
                 variant="standard"
                 margin="normal"
                 required
-                id="endereco"
-                label="Endereço"
-                name="endereco"
+                id="rua"
+                label="Rua"
+                name="rua"
+                value={endereco.rua}
+                onChange={(e) => setEndereco(e.target.value)}
               />
               <TextField
                 variant="standard"
@@ -305,6 +401,8 @@ export default function SignIn() {
                 id="complemento"
                 label="Complemento"
                 name="complemento"
+                value={endereco.complemento}
+                onChange={(e) => setEndereco(e.target.value)}
               />
               <Stack direction="row" spacing={5}>
                 <TextField
@@ -314,6 +412,8 @@ export default function SignIn() {
                   id="bairro"
                   label="Bairro"
                   name="bairro"
+                  value={endereco.bairro}
+                  onChange={(e) => setEndereco(e.target.value)}
                 />
                 <TextField
                   variant="standard"
@@ -323,40 +423,46 @@ export default function SignIn() {
                   id="numero"
                   label="N°"
                   name="numero"
+                  value={endereco.numero}
+                  onChange={(e) => setEndereco(e.target.value)}
                 />
               </Stack>
               <Stack direction="row" spacing={5}>
-                <FormControl variant="standard" fullWidth>
+               <FormControl variant="standard" fullWidth>
                   <InputLabel id="demo-simple-select-standard-label">
                     UF
                   </InputLabel>
                   <Select
-                    value={uf}
-                    onChange={(e) => setUf(e.target.value)}
+                    value={endereco.uf}
+                    onChange={(e) => setEndereco(e.target.value)}
                     label="Uf"
                   >
                     <MenuItem value="">
                       <em>Nenhum</em>
                     </MenuItem>
-                    <MenuItem value={10}>AM</MenuItem>
-                    <MenuItem value={20}>AC</MenuItem>
-                    <MenuItem value={30}>RR</MenuItem>
+                    <MenuItem value={"AM"}>AM</MenuItem>
+                    <MenuItem value={"AC"}>AC</MenuItem>
+                    <MenuItem value={"RR"}>RR</MenuItem>
                   </Select>
-                </FormControl>
+                </FormControl> 
                 <TextField
+                  InputLabelProps={{ shrink: true }}
                   variant="standard"
                   required
                   fullWidth
                   id="cidade"
                   label="Cidade"
                   name="cidade"
-                  autoComplete="email"
+                  value={endereco.cidade}
+                  onChange={(e) => setEndereco(e.target.value)}
                 />
               </Stack>
             </Stack>
+            
+            {erro.length >= 1 && <p>{erro}</p> }
             <Stack my={5} direction="row" spacing={15}>
               <button className="button-cancel">Cancelar</button>
-              <button className="button-main">Salvar</button>
+              <button type="submit" className="button-main">Salvar</button>
             </Stack>
           </Box>
         </Box>
