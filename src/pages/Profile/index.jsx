@@ -1,3 +1,5 @@
+import ModeEditOutlineSharpIcon from "@mui/icons-material/ModeEditOutlineSharp";
+import { Button, Stack } from "@mui/material";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -5,93 +7,151 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import axios from 'axios';
-
-import { Button, Stack } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-
-import ModeEditOutlineSharpIcon from "@mui/icons-material/ModeEditOutlineSharp";
-import iconProfile from "../../assets/img/icons/editProfile.png";
-
-import InputMask from "react-input-mask";
-
-import "./profile.css";
-
-import { uploads } from "../../utils/config";
-
-// hooks
 import { useEffect, useState } from "react";
+import InputMask from "react-input-mask";
 import { useDispatch, useSelector } from "react-redux";
-
-// Redux
-import { profile } from "../../slices/userSlice";
-
-// components
+import iconProfile from "../../assets/img/icons/editProfile.png";
+import Message from '../../components/Message';
+import { profile, resetMessage, updateProfile } from "../../slices/userSlice";
+import { uploads } from "../../utils/config";
 
 const theme = createTheme();
 
-export default function SignIn() {
+const Profile = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.user.user);
+
+  const { user, message, error, loading } = useSelector((state) => state.user);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [previewImage, setPreviewImage] = useState("");
   const [profileImage, setProfileImage] = useState("");
+  const [previewImage, setPreviewImage] = useState("");
   const [cpf, setCpf] = useState("");
-
-
-
-const [endereco,setEndereco] = useState({
-  cep:"",
-  rua:"",
-  complemento:"",
-  numero:"",
-  cidade:"",
-  bairro:"",
-  uf:""
-})
-   const [cep, setCep] = useState('');
-   const [erro, setErro] = useState("")
-
-  /* const [rua, setRua] = useState('')
-  const [complemento, setComplemento] = useState('')
-  const [numero, setNumero] = useState('')
-  const [cidade, setCidade] = useState('')
-  const [bairro, setBairro] = useState('')
-  const [uf, setUf] = useState(""); */
-
-
-  
-  const [gender, setGender] = useState("");
-  const [civil, setCivil] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
+  const [genero, setGenero] = useState("");
+  const [estadoCivil, setEstadoCivil] = useState("");
+  const [endereco,setEndereco] = useState({
+    "rua":"",
+    "complemento":"",
+    "bairro":"",
+    "cidade":"",
+    "uf":""
+  })
+  const [cep, setCep] = useState("");
+  const [numero, setNumero] = useState("");
+  const [erro, setErro] = useState("")
   const [activeEmail, setActiveEmail] = useState(true);
-  
 
+  // Load user data
+  useEffect(() => {
+    dispatch(profile());
+  }, [dispatch]);
 
-  const handleActive = () => {
-    if (activeEmail === true) {
-      setActiveEmail(false);
-    } else {
-      setActiveEmail(true);
+  // fill user form
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+      setCpf(user.cpf);
+      setGenero(user.genero);
+      setEstadoCivil(user.estadoCivil);
+      setDataNascimento(user.dataNascimento);
     }
+  }, [user]);
+  
+  //api de cep
+  useEffect(() => {
+    if(cep?.length === 8){
+    axios.get(`https://viacep.com.br/ws/${cep}/json/`)
+    .then(function (response) {
+      if (response.data.erro){
+        setEndereco({
+          "rua":"",
+          "complemento":"",
+          "cidade":"",
+          "bairro":"",
+          "uf":""
+        })
+        return setErro("Cep inválido, digite as informações manualmente!");
+      }
+      setErro("")
+      setEndereco({
+        "rua":response.data.logradouro,
+        "complemento":response.data.complemento,
+        "bairro":response.data.bairro,
+        "cidade":response.data.localidade,
+        "uf":response.data.uf
+      })
+    })
+    .catch(function (error) {
+      console.error(error);
+    })
+  }
+  }, [cep]);
+
+  //enviar formulário
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const enderecoData = {cep, numero, ...endereco};
+
+    await axios.post('http://localhost:5000/api/adress/register', enderecoData)
+    .then(function (response) {
+      alert(response.data.message)
+      console.log(response)
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+    
+    // Gather user data from states
+    const userData = {
+      name,
+      cpf,
+      genero,
+      estadoCivil,
+      dataNascimento,
+    };
+
+    if (profileImage) {
+      userData.profileImage = profileImage;
+    }
+
+    if (cpf){
+      userData.cpf = cpf
+    }
+
+    if(genero){
+      userData.genero = genero;
+    }
+
+    if (estadoCivil) {
+      userData.estadoCivil = estadoCivil;
+    }
+
+    if (dataNascimento) {
+      userData.dataNascimento = dataNascimento;
+    }
+
+    // build form data
+    const formData = new FormData()
+
+    Object.keys(userData).forEach((key) =>
+      formData.append(key, userData[key])
+    ); 
+
+    await dispatch(updateProfile(formData));
+
+    setTimeout(() => {
+      dispatch(resetMessage());
+    }, 2000);
   };
 
-    // Load user data
-    useEffect(() => {
-      dispatch(profile());
-    }, [dispatch]);
-  
-    // fill user form
-    useEffect(() => {
-      if (user) {
-        setName(user.name);
-        setEmail(user.email);
-      }
-    }, [user]);
-
+  //enviar foto
   const handleFile = (e) => {
     // image preview
     const image = e.target.files[0];
@@ -102,78 +162,35 @@ const [endereco,setEndereco] = useState({
     setProfileImage(image);
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    const formData = FormData()
-
-    formData.append("nome", name);
-    formData.append("email", email);
-    formData.append("cpf", cpf);
-    formData.append("gender", gender);
-    formData.append("civil", civil);
-    formData.append("cep", cep);
-    formData.append("rua", endereco.cep);
-    formData.append("complemento", endereco.complemento);
-    formData.append("numero", endereco.numero);
-    formData.append("cidade", endereco.cidade);
-    formData.append("bairro", endereco.bairro);
-    formData.append("uf", endereco.uf);
-
-    if (previewImage) {
-      formData.append("imagem", previewImage);
+  //ativar caixa de email
+  const handleActive = () => {
+    if (activeEmail === true) {
+      setActiveEmail(false);
+    } else {
+      setActiveEmail(true);
     }
-
-    /* api
-      .request({
-        url: "pratos/",
-        method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        data: formData,
-      })
-      .then(() => {
-        setNome("")
-        setDescricao("")
-        setRestaurante("")
-        setTag("")
-        alert("Prato cadastrado com sucesso!")
-      })
-      .catch((error) => console.log(error)); */
-    
   };
-  
-    useEffect(() => {
-      if(cep.length === 8){
-      axios.get(`https://viacep.com.br/ws/${cep}/json/`)
-      .then(function (response) {
-        if (response.data.erro){
-          setEndereco({
-            rua:"",
-            complemento:"",
-            numero:"",
-            cidade:"",
-            bairro:"",
-            uf:""
-          })
-          return setErro("Cep inválido, digite as informações manualmente!");
-        }
-        setErro("")
-        setEndereco({
-          rua:response.data.logradouro,
-          complemento:response.data.complemento,
-          bairro:response.data.bairro,
-          uf:response.data.uf,
-          cidade:response.data.localidade
-        })
-      })
-      .catch(function (error) {
-        console.error(error);
+
+  //formatar data
+  const attDate = (e) => {
+    setDataNascimento(e.target.value)
+    /* const dataAtualizada = e.target.value.split('-').reverse().join('/')
+    setDataNascimentoAtt(dataAtualizada) */
+  }
+
+  //OnChange endereço
+  const submitEndereco = (e) => {
+    if (e.target.getAttribute('name') === "rua"){
+      setEndereco({ 
+        "rua":endereco.rua,
+        "complemento":endereco.complemento,
+        "bairro":endereco.bairro,
+        "cidade":endereco.cidade,
+        "uf":endereco.uf
       })
     }
-    }, [cep]);
- 
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <Typography
@@ -203,14 +220,14 @@ const [endereco,setEndereco] = useState({
               display: "flex",
               flexDirection: "column",
               mr: 2,
-              maxWidth: "100em",
+              width: "200px",
+             
             }}
           >
-            <div>
               <Stack spacing={2}>
                 {user.profileImage || previewImage ? (
                   <img
-                    className="profile-image"
+                  className="profile-img"
                     src={
                       previewImage
                         ? URL.createObjectURL(previewImage)
@@ -219,7 +236,7 @@ const [endereco,setEndereco] = useState({
                     alt={user.name}
                   />
                 ) : (
-                  <img src={iconProfile} alt="iconProfile" width="100%" />
+                  <img src={iconProfile} alt="iconProfile" />
                 )}
                 <Button
                   className="button-main"
@@ -230,7 +247,6 @@ const [endereco,setEndereco] = useState({
                   <input onChange={handleFile} hidden type="file" />
                 </Button>
               </Stack>
-            </div>
           </Box>
 
           <Box noValidate sx={{ maxWidth: "300em" }}>
@@ -267,7 +283,6 @@ const [endereco,setEndereco] = useState({
                   id="email"
                   label="Email"
                   name="email"
-                  autoComplete="email"
                 />
               ) : (
                 <TextField
@@ -279,7 +294,7 @@ const [endereco,setEndereco] = useState({
                   id="email"
                   label="Email"
                   name="email"
-                  autoComplete="email"
+             
                 />
               )}
               <Button
@@ -308,8 +323,9 @@ const [endereco,setEndereco] = useState({
                 <Select
                   labelId="demo-simple-select-filled-label"
                   id="demo-simple-select-filled"
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
+                  value={genero || ""}
+                  name="genero"
+                  onChange={(e) => setGenero(e.target.value)}
                   label="Gênero"
                 >
                   <MenuItem value="">
@@ -324,8 +340,8 @@ const [endereco,setEndereco] = useState({
                   Estado Civil
                 </InputLabel>
                 <Select
-                  value={civil}
-                  onChange={(e) => setCivil(e.target.value)}
+                  value={estadoCivil || ""}
+                  onChange={(e) => setEstadoCivil(e.target.value)}
                   label="Civil"
                 >
                   <MenuItem value="">
@@ -333,7 +349,6 @@ const [endereco,setEndereco] = useState({
                   </MenuItem>
                   <MenuItem value="solteiro(a)">Solteiro(a)</MenuItem>
                   <MenuItem value="casado(a)">Casado(a)</MenuItem>
-               
                 </Select>
               </FormControl>
             </Stack>
@@ -348,15 +363,17 @@ const [endereco,setEndereco] = useState({
                 id="dataNascimento"
                 label="Data de nascimento"
                 name="dataNascimento"
+                value={dataNascimento || ""}
+                onChange={attDate}
               />
               <InputMask
                 mask="999.999.999-99"
-                value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
-                maskChar="_"
+                value={cpf || ""}
+                onChange={(e) => setCpf(e.target.value.replace( /\D/g , ""))}
               >
                 {() => (
                   <TextField
+                    InputLabelProps={{ shrink: true }}
                     variant="standard"
                     fullWidth
                     required
@@ -373,9 +390,9 @@ const [endereco,setEndereco] = useState({
             </Typography>
             <Stack spacing={1}>
               <TextField
+                InputLabelProps={{ shrink: true }}
                 variant="standard"
                 margin="normal"
-                required
                 type="number"
                 id="cep"
                 label="CEP"
@@ -387,44 +404,42 @@ const [endereco,setEndereco] = useState({
               <TextField
                 variant="standard"
                 margin="normal"
-                required
                 id="rua"
                 label="Rua"
                 name="rua"
-                value={endereco.rua}
-                onChange={(e) => setEndereco(e.target.value)}
+                value={endereco.rua || ""}
+                onChange={(e) => submitEndereco(e)}
               />
               <TextField
                 variant="standard"
                 margin="normal"
-                required
                 id="complemento"
                 label="Complemento"
                 name="complemento"
-                value={endereco.complemento}
-                onChange={(e) => setEndereco(e.target.value)}
+                value={endereco.complemento || ""}
+                onChange={(e) => submitEndereco(e)}
               />
               <Stack direction="row" spacing={5}>
                 <TextField
                   variant="standard"
-                  required
                   fullWidth
                   id="bairro"
                   label="Bairro"
                   name="bairro"
-                  value={endereco.bairro}
-                  onChange={(e) => setEndereco(e.target.value)}
+                  value={endereco.bairro || ""}
+                  onChange={(e) => submitEndereco(e)}
                 />
                 <TextField
+                  InputLabelProps={{ shrink: true }}
                   variant="standard"
                   margin="normal"
                   fullWidth
-                  required
                   id="numero"
                   label="N°"
                   name="numero"
-                  value={endereco.numero}
-                  onChange={(e) => setEndereco(e.target.value)}
+                  required
+                  value={numero}
+                  onChange={(e) => setNumero(e.target.value)}
                 />
               </Stack>
               <Stack direction="row" spacing={5}>
@@ -433,40 +448,54 @@ const [endereco,setEndereco] = useState({
                     UF
                   </InputLabel>
                   <Select
-                    value={endereco.uf}
-                    onChange={(e) => setEndereco(e.target.value)}
                     label="Uf"
+                    value={endereco.uf || ""}
+                    onChange={(e) => submitEndereco(e)}
                   >
                     <MenuItem value="">
                       <em>Nenhum</em>
                     </MenuItem>
-                    <MenuItem value={"AM"}>AM</MenuItem>
-                    <MenuItem value={"AC"}>AC</MenuItem>
-                    <MenuItem value={"RR"}>RR</MenuItem>
+                    <MenuItem value="AM">AM</MenuItem>
+                    <MenuItem value="AC">AC</MenuItem>
+                    <MenuItem value="RR">RR</MenuItem>
                   </Select>
+              
                 </FormControl> 
                 <TextField
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={{ shrink: true }} 
                   variant="standard"
-                  required
                   fullWidth
                   id="cidade"
                   label="Cidade"
                   name="cidade"
-                  value={endereco.cidade}
-                  onChange={(e) => setEndereco(e.target.value)}
-                />
+                  value={endereco.cidade || ""}
+                  onChange={(e) => submitEndereco(e)}
+                /> 
               </Stack>
             </Stack>
             
             {erro.length >= 1 && <p>{erro}</p> }
             <Stack my={5} direction="row" spacing={15}>
-              <button className="button-cancel">Cancelar</button>
-              <button type="submit" className="button-main">Salvar</button>
+              <Button className="button-cancel">Cancelar</Button>
+              {loading ? (
+                  <Button className="button-disabled" disabled>
+                    Atualizando...
+                  </Button>
+                ) : (
+                  <Button type="submit" className="button-main">
+                    Atualizar
+                  </Button>
+                )}
+               
             </Stack>
+            {error && <Message msg={error} type="error"/>}
+                {message && <Message msg={message} type="success" />}
           </Box>
         </Box>
       </Container>
     </ThemeProvider>
   );
-}
+  
+};
+
+export default Profile;

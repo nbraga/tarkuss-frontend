@@ -29,7 +29,7 @@ export default function Register() {
   const [confirmText, setConfirmText] = useState(false);
 
   const dispatch = useDispatch();
-  console.log(dispatch);
+ 
 
   const { loading, error } = useSelector((state) => state.auth || {});
 

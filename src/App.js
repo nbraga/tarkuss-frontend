@@ -6,7 +6,6 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Error404 from "./pages/Error404";
-
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 

@@ -103,7 +103,7 @@ const ResponsiveAppBar = () => {
                 }}
               >
                 {auth ? (
-                  <>
+                 
                     <Stack>
                       <MenuItem onClick={handleCloseNavMenu}>
                         <LinkReact
@@ -133,9 +133,9 @@ const ResponsiveAppBar = () => {
                         </Button>
                       </MenuItem>
                     </Stack>
-                  </>
+                 
                 ) : (
-                  <>
+                  
                     <Stack>
                       <MenuItem onClick={handleCloseNavMenu}>
                         <LinkReact
@@ -160,7 +160,7 @@ const ResponsiveAppBar = () => {
                         </LinkReact>
                       </MenuItem>
                     </Stack>
-                  </>
+                 
                 )}
               </Menu>
             </Box>

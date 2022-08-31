@@ -12,6 +12,8 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
+import Message from '../../components/Message'
+
 import bgLogin from "../../assets/img/backgrounds/bgLogin.png";
 
 import { Link as LinkDom } from "react-router-dom";
@@ -195,6 +197,7 @@ export default function Login() {
                     Entrar
                   </Button>
                 )}
+                {error && <Message msg={error} type="error"/>}
                 <Stack spacing={5} alignItems="center">
                   <Grid mt={5} item>
                     <Link

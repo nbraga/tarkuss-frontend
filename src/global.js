@@ -103,6 +103,7 @@ ul, li{
     padding: 10px;
     border:none;
     background: none;
+    text-transform: capitalize;
 }
 
 .button-link{
@@ -116,6 +117,11 @@ ul, li{
 .button-link:hover{
     background: none;
 
+}
+
+.profile-img{
+    border-radius: 50%;
+    width: 100%;
 }
 
 /* .active {
